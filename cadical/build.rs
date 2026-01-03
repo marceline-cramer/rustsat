@@ -649,11 +649,6 @@ fn has_cpp_feature(feature: CppFeature) -> bool {
         .args([&test_file, "-o", &out_file])
         .output()
         .expect("failed to run test compilation");
-    if !compile.status.success() {
-        return false;
-    }
-    let output = Command::new(out_file)
-        .output()
-        .expect("failed to execute compiled test");
-    output.status.success()
+
+    compile.status.success()
 }
