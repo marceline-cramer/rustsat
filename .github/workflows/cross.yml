@@ -16,24 +16,25 @@ jobs:
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: true
-      include:
-        - runner: ubuntu-latest
-          target: x86_64-unknown-linux-gnu
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
 
-        - runner: ubuntu-latest
-          target: aarch64-unknown-linux-gnu
+          - runner: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
 
-        - runner: ubuntu-latest
-          target: x86_64-unknown-linux-musl
+          - runner: ubuntu-latest
+            target: x86_64-unknown-linux-musl
 
-        - runner: ubuntu-latest
-          target: aarch64-unknown-linux-musl
+          - runner: ubuntu-latest
+            target: aarch64-unknown-linux-musl
 
-        - runner: macos-latest
-          target: x86_64-apple-darwin
+          - runner: macos-latest
+            target: x86_64-apple-darwin
 
-        - runner: ubuntu-latest
-          target: x86_64-pc-windows-gnu
+          - runner: ubuntu-latest
+            target: x86_64-pc-windows-gnu
 
     steps:
       - name: Checkout
