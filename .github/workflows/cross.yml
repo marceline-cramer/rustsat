@@ -33,6 +33,7 @@ jobs:
           - target: x86_64-pc-windows-gnu
             runner: ubuntu-latest
             build: cross
+            args: --exclude rustsat-kissat
 
           - target: x86_64-pc-windows-msvc
             runner: windows-latest
