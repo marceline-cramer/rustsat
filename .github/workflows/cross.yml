@@ -18,6 +18,10 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
+        build: [cross, cargo]
+        exclude:
+          - target: x86_64-pc-windows-msvc
+            build: cross
         include:
           - runner: ubuntu-latest
             target: x86_64-unknown-linux-gnu
@@ -37,23 +41,27 @@ jobs:
           - runner: ubuntu-latest
             target: x86_64-pc-windows-gnu
 
+          - runner: windows-latest
+            target: x86_64-pc-windows-msvc
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
+        if: ${{ matrix.build == 'cargo' }}
         with:
           target: ${{ matrix.target }}
 
       - name: Setup Cross
         uses: taiki-e/install-action@v2
-        if: ${{ matrix.cargo_build == 'cross build' }}
+        if: ${{ matrix.build == 'cross' }}
         with:
           tool: cross
 
       - name: Build
-        run: cargo b --workspace --verbose
+        run: ${{ matrix.build }} --workspace --verbose --profile debug --cc-enable-debug --keep-going
 
   cross-openbsd:
     name: OpenBSD build
