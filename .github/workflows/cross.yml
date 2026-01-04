@@ -16,33 +16,28 @@ jobs:
     name: Cross-platform build
     runs-on: ${{ matrix.runner }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
+        target:
+          - x86_64-unknown-linux-gnu
+          - x86_64-unknown-linux-musl
+          - aarch64-unknown-linux-gnu
+          - aarch64-unknown-linux-musl
         build: [cross, cargo]
-        exclude:
-          - target: x86_64-pc-windows-msvc
-            build: cross
+        runner: [ubuntu-latest]
         include:
-          - runner: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
+          - target: x86_64-apple-darwin
+            runner: macos-latest
+            build: cargo
 
-          - runner: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
+          - target: x86_64-pc-windows-gnu
+            runner: ubuntu-latest
+            build: cross
 
-          - runner: ubuntu-latest
-            target: x86_64-unknown-linux-musl
-
-          - runner: ubuntu-latest
-            target: aarch64-unknown-linux-musl
-
-          - runner: macos-latest
-            target: x86_64-apple-darwin
-
-          - runner: ubuntu-latest
-            target: x86_64-pc-windows-gnu
-
-          - runner: windows-latest
-            target: x86_64-pc-windows-msvc
+          - target: x86_64-pc-windows-msvc
+            runner: windows-latest
+            build: cargo
+            args: --exclude rustsat-cadical --exclude rustsat-kissat
 
     steps:
       - name: Checkout
@@ -61,7 +56,7 @@ jobs:
           tool: cross
 
       - name: Build
-        run: ${{ matrix.build }} --workspace --verbose --profile debug --cc-enable-debug --keep-going
+        run: ${{ matrix.build }} ${{ matrix.args }} --workspace --verbose --profile debug --cc-enable-debug --keep-going
 
   cross-openbsd:
     name: OpenBSD build
