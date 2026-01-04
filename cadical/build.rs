@@ -296,7 +296,7 @@ fn main() {
     // Note: this should be _after_ linking the solver itself so that it is actually pulled in
     #[cfg(target_os = "macos")]
     println!("cargo:rustc-link-lib=dylib=c++");
-    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+    #[cfg(target_os = "linux")]
     println!("cargo:rustc-link-lib=dylib=stdc++");
 
     let cadical_dir = get_cadical_dir(version, None);
@@ -649,11 +649,6 @@ fn has_cpp_feature(feature: CppFeature) -> bool {
         .args([&test_file, "-o", &out_file])
         .output()
         .expect("failed to run test compilation");
-    if !compile.status.success() {
-        return false;
-    }
-    let output = Command::new(out_file)
-        .output()
-        .expect("failed to execute compiled test");
-    output.status.success()
+
+    compile.status.success()
 }

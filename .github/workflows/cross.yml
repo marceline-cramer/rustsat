@@ -1,0 +1,90 @@
+name: Cross-compilation CI
+on:
+  push:
+    branches: ["main", "next-major"]
+  pull_request:
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -Dwarnings
+  RUSTDOCFLAGS: -Dwarnings
+  CARGO_HOME: ${{ github.workspace }}/.cargo # caches inside OpenBSD VMs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  cross-build:
+    name: Cross-platform build
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - x86_64-unknown-linux-musl
+          - aarch64-unknown-linux-gnu
+          - aarch64-unknown-linux-musl
+        build: [cross]
+        runner: [ubuntu-latest]
+        include:
+          - target: x86_64-unknown-linux-gnu
+            runner: ubuntu-latest
+            build: cross
+
+          - target: x86_64-apple-darwin
+            runner: macos-latest
+            build: cargo
+
+          - target: x86_64-pc-windows-gnu
+            runner: ubuntu-latest
+            build: cross
+            args: --exclude rustsat-kissat
+
+          - target: x86_64-pc-windows-msvc
+            runner: windows-latest
+            build: cargo
+            args: --exclude rustsat-cadical --exclude rustsat-kissat
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        if: ${{ matrix.build == 'cargo' }}
+        with:
+          target: ${{ matrix.target }}
+
+      - name: Setup Cross
+        uses: taiki-e/install-action@v2
+        if: ${{ matrix.build == 'cross' }}
+        with:
+          tool: cross
+
+      - name: Build
+        run: ${{ matrix.build }} build --target ${{ matrix.target }} ${{ matrix.args }} --exclude rustsat-pyapi --workspace --verbose --profile dev --keep-going
+
+  cross-openbsd:
+    name: OpenBSD build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86_64, aarch64, riscv64]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+
+      - name: Build
+        id: build
+        uses: vmactions/openbsd-vm@v1
+        with:
+          arch: ${{ matrix.arch }}
+          mem: 12288
+          envs: 'CARGO_HOME'
+          sync: nfs
+          prepare: pkg_add cmake 'gcc%11' llvm-19.1.7p9 git rust
+          run: LIBCLANG_PATH=/usr/local/llvm19/lib cargo b --workspace --verbose
