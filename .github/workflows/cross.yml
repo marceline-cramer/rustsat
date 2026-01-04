@@ -7,6 +7,7 @@ env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: -Dwarnings
   RUSTDOCFLAGS: -Dwarnings
+  CARGO_HOME: ${{ github.workspace }}/.cargo # caches inside OpenBSD VMs
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -53,3 +54,30 @@ jobs:
 
       - name: Build
         run: cargo b --workspace --verbose
+
+  cross-openbsd:
+    name: OpenBSD build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86_64, aarch64, riscv64]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+
+      - name: Build
+        id: build
+        uses: vmactions/openbsd-vm@v1
+        with:
+          arch: ${{ matrix.arch }}
+          mem: 12288
+          envs: 'CARGO_HOME'
+          sync: nfs
+          prepare: pkg_add 'gcc%11' llvm-19.1.7p9 git just rust
+          run: LIBCLANG_PATH=/usr/local/llvm19/lib cargo b --workspace --verbose
