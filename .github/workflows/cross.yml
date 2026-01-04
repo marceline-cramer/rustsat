@@ -56,7 +56,7 @@ jobs:
           tool: cross
 
       - name: Build
-        run: ${{ matrix.build }} build --target ${{ matrix.target }} ${{ matrix.args }} --workspace --verbose --profile dev --keep-going
+        run: ${{ matrix.build }} build --target ${{ matrix.target }} ${{ matrix.args }} --exclude rustsat-pyapi --workspace --verbose --profile dev --keep-going
 
   cross-openbsd:
     name: OpenBSD build
