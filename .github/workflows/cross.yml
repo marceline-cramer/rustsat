@@ -1,0 +1,54 @@
+name: Cross-compilation CI
+on:
+  push:
+    branches: ["main", "next-major"]
+  pull_request:
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -Dwarnings
+  RUSTDOCFLAGS: -Dwarnings
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  cross-build:
+    name: Cross-platform build
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: true
+      include:
+        - runner: ubuntu-latest
+          target: x86_64-unknown-linux-gnu
+
+        - runner: ubuntu-latest
+          target: aarch64-unknown-linux-gnu
+
+        - runner: ubuntu-latest
+          target: x86_64-unknown-linux-musl
+
+        - runner: ubuntu-latest
+          target: aarch64-unknown-linux-musl
+
+        - runner: macos-latest
+          target: x86_64-apple-darwin
+
+        - runner: ubuntu-latest
+          target: x86_64-pc-windows-gnu
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          target: ${{ matrix.target }}
+
+      - name: Setup Cross
+        uses: taiki-e/install-action@v2
+        if: ${{ matrix.cargo_build == 'cross build' }}
+        with:
+          tool: cross
+
+      - name: Build
+        run: cargo b --workspace --verbose
