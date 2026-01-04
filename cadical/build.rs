@@ -298,8 +298,6 @@ fn main() {
     println!("cargo:rustc-link-lib=dylib=c++");
     #[cfg(target_os = "linux")]
     println!("cargo:rustc-link-lib=dylib=stdc++");
-    #[cfg(target_os = "openbsd")]
-    println!("cargo:rustc-link-lib=dylib=estdc++");
 
     let cadical_dir = get_cadical_dir(version, None);
 
